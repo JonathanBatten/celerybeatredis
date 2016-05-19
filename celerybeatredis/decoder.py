@@ -11,6 +11,8 @@ try:
 except ImportError:
     import json
 
+from .globals import PY3
+
 
 class DateTimeDecoder(json.JSONDecoder):
     def __init__(self, *args, **kargs):
@@ -23,8 +25,14 @@ class DateTimeDecoder(json.JSONDecoder):
 
         type = d.pop('__type__')
         try:
-            dateobj = datetime(**d)
-            return dateobj
+            if type == 'datetime':
+                dateobj = datetime(**d)
+                return dateobj
+            elif type == 'set':
+                return set(d['objects'])
+            else:
+                d['__type__'] = type
+                return d
         except:
             d['__type__'] = type
             return d
@@ -33,7 +41,9 @@ class DateTimeDecoder(json.JSONDecoder):
 class DateTimeEncoder(json.JSONEncoder):
     """ Instead of letting the default encoder convert datetime to string,
         convert datetime objects into a dict, which can be decoded by the
-        DateTimeDecoder
+        DateTimeDecoder.
+        Also handle when running Python 3 which isn't able to serialize
+        sets in json by default
     """
 
     def default(self, obj):
@@ -49,4 +59,13 @@ class DateTimeEncoder(json.JSONEncoder):
                 'microsecond': obj.microsecond,
             }
         else:
-            return json.JSONEncoder.default(self, obj)
+            if PY3:
+                if isinstance(obj, set):
+                    return {
+                        '__type__': 'set',
+                        'objects': list(obj)
+                    }
+                else:
+                    return json.JSONEncoder.default(self, obj)
+            else:
+                return json.JSONEncoder.default(self, obj)

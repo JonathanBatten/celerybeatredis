@@ -16,7 +16,7 @@ except ImportError:
 
 from .decoder import DateTimeDecoder, DateTimeEncoder
 from .exceptions import TaskTypeError
-from .globals import bytes_to_str, default_encoding, logger
+from .globals import bytes_to_str, iteritems, default_encoding, logger
 
 
 class Interval(object):
@@ -135,7 +135,7 @@ class PeriodicTask(object):
                 # issues arising when saving keys - we want to add information to
                 # the current key, not create a new key
                 # logger.warning('json task {0}'.format(dct))
-                yield task_key, dct
+                yield bytes_to_str(task_key), dct
             except json.JSONDecodeError:  # handling bad json format by ignoring the task
                 logger.warning('ERROR Reading json task at %s', task_key)
 
@@ -224,7 +224,7 @@ class PeriodicTask(object):
         => rdb is hidden
         :return:
         """
-        for k, v in vars(self).iteritems():
+        for k, v in iteritems(vars(self)):
             if k == 'data':
                 yield 'schedule', self.schedule
             else:  # we can expose everything else

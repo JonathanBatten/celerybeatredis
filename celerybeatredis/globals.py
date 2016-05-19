@@ -31,3 +31,16 @@ def str_to_bytes(s):
         if isinstance(s, str):
             return s.encode(default_encoding)
     return s
+
+def iteritems(obj, **kwargs):
+    """
+    Based on Pandas. Python2/3 compatability for 'iteritems'.
+    uses 'iteritems' if available and otherwise uses 'items'.
+
+    Passes kwargs to method.
+    """
+    func = getattr(obj, "iteritems", None)
+    if not func:
+        func = obj.items
+    return func(**kwargs)
+
